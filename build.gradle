@@ -11,13 +11,13 @@ apply plugin: 'maven-publish'
 
 
 //--- Project information ---
-group = 'net.foragerr.jmeter'
+group = 'com.patdouble.jmeter'
 archivesBaseName = 'jmeter-gradle-plugin'
 
-ext.thisPluginVersion="1.1.0"
+ext.thisPluginVersion="1.1.1"
 ext.jmVersion = "4.0"
 ext.jmPluginVersion = "1.4.0"
-version = "$thisPluginVersion-$jmVersion-SNAPSHOT"
+version = System.getenv('CIRCLE_TAG') ?: "$thisPluginVersion-$jmVersion-SNAPSHOT"
 
 //--- Repositories ---
 repositories {
@@ -208,9 +208,9 @@ bintray {
     publications = ['mavenJava'] //When uploading Maven-based publication files
     publish = true //If version should be auto published after an upload
     pkg {
-        repo = "jmeter"
+        repo = "plugins"
         name = "$archivesBaseName"
-        userOrg = "$archivesBaseName" 
+        userOrg = "double16" 
         licenses = ['Apache-2.0']
         publicDownloadNumbers = true
         websiteUrl = 'http://jmeter.foragerr.net'
