@@ -11,3 +11,4 @@
 bin/
 .settings/
 *.bak
+.vscode
