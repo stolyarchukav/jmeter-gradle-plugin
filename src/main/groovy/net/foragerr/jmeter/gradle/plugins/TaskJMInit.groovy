@@ -9,7 +9,7 @@ import org.gradle.api.tasks.TaskAction
 
 class TaskJMInit extends DefaultTask {
 
-    protected final Logger log = Logging.getLogger(getClass());
+    protected final Logger log = Logging.getLogger(getClass())
 
     private String thisPluginVersion
     private String jmeterVersion
@@ -21,10 +21,12 @@ class TaskJMInit extends DefaultTask {
         //Init plugin settings
         File buildDir = project.getBuildDir()
         File workDir = new File(buildDir, "jmeter")
+        File binDir = new File(workDir, "bin")
         project.jmeter.workDir = workDir
+        project.jmeter.binDir = binDir
 
         // Test Files //
-        project.jmeter.testFileDir = project.jmeter.testFileDir == null ? new File(project.getProjectDir(), "src/test/jmeter") : project.jmeter.testFileDir;
+        project.jmeter.testFileDir = project.jmeter.testFileDir == null ? new File(project.getProjectDir(), "src/test/jmeter") : project.jmeter.testFileDir
 
         // Logs //
         project.jmeter.reportDir = project.jmeter.reportDir ?: new File(buildDir, "jmeter-report")
@@ -45,6 +47,8 @@ class TaskJMInit extends DefaultTask {
         project.jmeter.jmVersion = this.jmeterVersion
 
         //Create required folders
+        binDir.mkdirs()
+
         def jmeterJUnitFolder = new File(workDir, "lib/junit")
         jmeterJUnitFolder.mkdirs()
 
@@ -58,43 +62,45 @@ class TaskJMInit extends DefaultTask {
         //print version info
         log.info("------------------------")
         log.info("Using")
-        log.info("   jmeter-gradle-plugin version:" + this.thisPluginVersion);
-        log.info("   jmeter version:" + this.jmeterVersion);
-        log.info("   jmeter jp@gc plugins version:" + this.jmeterPluginsVersion);
+        log.info("   jmeter-gradle-plugin version:" + this.thisPluginVersion)
+        log.info("   jmeter version:" + this.jmeterVersion)
+        log.info("   jmeter jp@gc plugins version:" + this.jmeterPluginsVersion)
         log.info("------------------------")
     }
 
     protected void initTempProperties() throws IOException {
-        List<File> tempProperties = new ArrayList<File>();
+        List<File> tempProperties = []
 
-        File saveServiceProperties = new File(project.jmeter.workDir, "saveservice.properties");
-        System.setProperty("saveservice_properties", "/" + saveServiceProperties.getName());
-        tempProperties.add(saveServiceProperties);
-        log.debug("saveservice_properties location is " + System.getProperty("saveservice_properties"))
+        [
+                'saveservice.properties',
+                'system.properties',
+                'reportgenerator.properties',
+                'user.properties',
+                'jmeter-plugin.properties',
+                'log4j2.xml'
+        ].each {
+            File f = new File(project.jmeter.workDir as File, it)
+            log.debug('{} location is {}', it, f.absolutePath)
+            tempProperties << f
+        }
 
-        File upgradeProperties = new File(project.jmeter.workDir, "upgrade.properties");
-        System.setProperty("upgrade_properties", "/" + upgradeProperties.getName());
-        tempProperties.add(upgradeProperties);
+        File upgradeProperties = new File(project.jmeter.workDir as File, 'upgrade.properties')
+        System.setProperty('upgrade_properties', '/' + upgradeProperties.getName())
+        tempProperties.add(upgradeProperties)
 
-        File defaultJmeterProperties = new File(project.jmeter.workDir, "jmeter.properties");
-        System.setProperty("default_jm_properties", "/" + defaultJmeterProperties.getName());
-        tempProperties.add(defaultJmeterProperties);
-
-        File jmPluginProperties = new File(project.jmeter.workDir, "jmeter-plugin.properties");
-        System.setProperty("default_jm_properties", "/" + jmPluginProperties.getName());
-        tempProperties.add(jmPluginProperties);
+        File defaultJmeterProperties = new File(project.jmeter.workDir as File, 'jmeter.properties')
+        System.setProperty('default_jm_properties', '/' + defaultJmeterProperties.getName())
+        tempProperties.add(defaultJmeterProperties)
 
         //Copy files from jar to workDir
         for (File f : tempProperties) {
             try {
-                FileWriter writer = new FileWriter(f);
-                IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(f.getName()), writer);
-                writer.flush();
-                writer.close();
+                f.withWriter { Writer writer ->
+                    IOUtils.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream(f.getName()), writer, 'UTF-8')
+                }
             } catch (IOException ioe) {
-                throw new GradleException("Couldn't create temporary property file " + f.getName() + " in directory " + workDir.getPath(), ioe);
+                throw new GradleException("Couldn't create temporary property file " + f.getName() + " in directory " + f.getParent(), ioe)
             }
-
         }
     }
 
@@ -102,7 +108,7 @@ class TaskJMInit extends DefaultTask {
         StringBuilder cp = new StringBuilder()
         URL[] classPath = ((URLClassLoader) this.getClass().getClassLoader()).getURLs()
         String jmeterVersionPattern = project.jmeter.jmVersion.replaceAll("[.]", "[.]")
-        String pathSeparator = ';'; //intentionally not File.PathSeparator - JMeter parses for ; on all platforms
+        String pathSeparator = ';' //intentionally not File.PathSeparator - JMeter parses for ; on all platforms
         for (URL dep : classPath) {
             if (dep.getPath().matches("^.*org[./]apache[./]jmeter[/]ApacheJMeter.*" +
                     jmeterVersionPattern + ".jar\$")) {
@@ -112,13 +118,13 @@ class TaskJMInit extends DefaultTask {
                 cp.append(dep.getPath())
                 cp.append(pathSeparator)
                 //add jp@gc plugins to search_path
-            } else if (dep.getPath().matches("^.*jmeter-plugins.*\$")) {
+            } else if (dep.getPath().matches("^.*jmeter-.*\$")) {
                 cp.append(dep.getPath())
                 cp.append(pathSeparator)
             }
         }
-        cp.append(new File(project.jmeter.workDir, "lib" + File.separator + "ext").getCanonicalPath())
-        System.setProperty("search_paths", cp.toString());
+        cp.append(new File(project.jmeter.workDir as File, "lib" + File.separator + "ext").getCanonicalPath())
+        System.setProperty("search_paths", cp.toString())
         log.debug("Search path is set to " + System.getProperty("search_paths"))
     }
 
@@ -131,6 +137,7 @@ class TaskJMInit extends DefaultTask {
             }
             Properties pluginProps = new Properties()
             pluginProps.load(is)
+            is.close()
 
             this.thisPluginVersion = pluginProps.getProperty("thisPlugin.version")
             this.jmeterVersion = pluginProps.getProperty("jmeter.version")

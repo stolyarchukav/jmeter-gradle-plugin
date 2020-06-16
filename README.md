@@ -1,10 +1,17 @@
 ## Gradle plugin to execute JMeter tests.  
-[![Build Status](https://travis-ci.org/jmeter-gradle-plugin/jmeter-gradle-plugin.svg?branch=master)](https://travis-ci.org/jmeter-gradle-plugin/jmeter-gradle-plugin) [ ![LatestVersion](https://api.bintray.com/packages/jmeter-gradle-plugin/jmeter/jmeter-gradle-plugin/images/download.svg?version=1.0.10-3.3) ](https://bintray.com/jmeter-gradle-plugin/jmeter/jmeter-gradle-plugin/1.0.10-3.3/link)
+[![Build Status](https://travis-ci.org/jmeter-gradle-plugin/jmeter-gradle-plugin.svg?branch=master)](https://travis-ci.org/jmeter-gradle-plugin/jmeter-gradle-plugin) [ ![Download](https://api.bintray.com/packages/jmeter-gradle-plugin/jmeter/jmeter-gradle-plugin/images/download.svg) ](https://bintray.com/jmeter-gradle-plugin/jmeter/jmeter-gradle-plugin/_latestVersion)
 
 For usage see: http://jmeter.foragerr.net/  
 or [wiki](https://github.com/jmeter-gradle-plugin/jmeter-gradle-plugin/wiki/Getting-Started)
 
 ## News
+**6/16/2020**
+* Version 1.2.0 released with support for Jmeter 5.3
+
+**8/22/2018**
+* Version 1.1.0 released with support for Jmeter 4.0
+* I have not extensively tested this release, caveat emptor
+
 **11/16/2017**
 * Version 1.0.10 release with support for Jmeter 3.3
 * Note that 1.0.9 and 1.0.8 are broken

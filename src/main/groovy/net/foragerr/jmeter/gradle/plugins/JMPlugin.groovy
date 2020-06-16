@@ -11,7 +11,7 @@ import org.gradle.api.logging.Logging
 class JMPlugin implements Plugin<Project>{
 
     static final String TASK_GROUP_NAME = 'JMeter'
-    protected final Logger log = Logging.getLogger(getClass());
+    protected final Logger log = Logging.getLogger(getClass())
 
     void apply(Project project){
         project.extensions.create("jmeter", JMPluginExtension)

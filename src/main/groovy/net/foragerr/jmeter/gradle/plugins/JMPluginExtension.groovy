@@ -28,14 +28,21 @@ class JMPluginExtension {
     Boolean showSummarizer = null
 	Boolean failBuildOnError = null
 
+    // Report Options //
+    Boolean enableReports = true
+    Boolean enableExtendedReports = null
+    File reportXslt = null
+    String reportTitle = null
+    String reportPostfix = null
+
     // Java Properties //
     String maxHeapSize
     String minHeapSize
 
     // For internal use, Not user settable //
     String jmVersion
-    String jmPluginVersion
     File workDir = null
+    File binDir = null
     File reportDir = null
     List<File> jmResultFiles = null
 
