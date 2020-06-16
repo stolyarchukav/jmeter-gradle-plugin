@@ -9,9 +9,9 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskAction
 
-public class TaskJMRun extends DefaultTask {
+class TaskJMRun extends DefaultTask {
 
-    protected final Logger log = Logging.getLogger(getClass());
+    protected final Logger log = Logging.getLogger(getClass())
 
     @TaskAction
     jmRun() {
@@ -20,44 +20,44 @@ public class TaskJMRun extends DefaultTask {
         List<File> testFiles = JMUtils.getListOfTestFiles(project)
 
         //Run Tests
-        List<File> resultList = new ArrayList<File>();
+        List<File> resultList = new ArrayList<File>()
         for (File testFile : testFiles) resultList.add(executeJmeterTest(testFile))
 
         //Scan for errors
-        checkForErrors(resultList);
-        project.jmeter.jmResultFiles = resultList;
+        checkForErrors(resultList)
+        project.jmeter.jmResultFiles = resultList
 
     }
 
     private void checkForErrors(List<File> results) {
-        ErrorScanner scanner = new ErrorScanner(project.jmeter.ignoreErrors, project.jmeter.ignoreFailures, project.jmeter.failBuildOnError);
+        ErrorScanner scanner = new ErrorScanner(project.jmeter.ignoreErrors, project.jmeter.ignoreFailures, project.jmeter.failBuildOnError)
         try {
             for (File file : results) {
                 if (scanner.scanForProblems(file)) {
-                    log.warn("There were test errors.  See the jmeter logs for details");
+                    log.warn("There were test errors.  See the jmeter logs for details")
 
-					if (project.jmeter.failBuildOnError) 
-						throw new GradleException("Errors during JMeter test");             
+                    if (project.jmeter.failBuildOnError) 
+						throw new GradleException("Errors during JMeter test")             
                 }
             }
         } catch (IOException e) {
-            throw new GradleException("Can't read log file", e);
+            throw new GradleException("Can't read log file", e)
         }
     }
 
     private File executeJmeterTest(File testFile) {
         try {
             log.info('Executing jMeter test : ' + testFile.getCanonicalPath())
-            File resultFile = JMUtils.getResultFile(testFile, project);
-            resultFile.delete();
+            File resultFile = JMUtils.getResultFile(testFile, project)
+            resultFile.delete()
 
             //Build Jmeter command args
-            List<String> args = new ArrayList<String>();
+            List<String> args = new ArrayList<String>()
             args.addAll(Arrays.asList("-n",
                     "-t", testFile.getCanonicalPath(),
                     "-l", resultFile.getCanonicalPath(),
                     "-p", JMUtils.getJmeterPropsFile(project).getCanonicalPath()
-            ));
+            ))
 
             // additional properties from file
             if (project.jmeter.jmAddProp)
@@ -68,7 +68,7 @@ public class TaskJMRun extends DefaultTask {
             if (project.jmeter.jmSystemPropertiesFiles != null) {
                 for (File systemPropertyFile : project.jmeter.jmSystemPropertiesFiles) {
                     if (systemPropertyFile.exists() && systemPropertyFile.isFile()) {
-                        args.addAll(Arrays.asList("-S", systemPropertyFile.getCanonicalPath()));
+                        args.addAll(Arrays.asList("-S", systemPropertyFile.getCanonicalPath()))
                     }
                 }
             }
@@ -76,8 +76,8 @@ public class TaskJMRun extends DefaultTask {
             // jmSystemProperties
             if (project.jmeter.jmSystemProperties != null) {
                 for (String systemProperty : project.jmeter.jmSystemProperties) {
-                    userSysProps.addAll(Arrays.asList(systemProperty));
-                    log.info(systemProperty);
+                    userSysProps.addAll(Arrays.asList(systemProperty))
+                    log.info(systemProperty)
                 }
             }
 
@@ -92,22 +92,22 @@ public class TaskJMRun extends DefaultTask {
             }
 
             if (project.jmeter.remote) {
-                args.add("-r");
+                args.add("-r")
             }
 
-            log.info("JMeter is called with the following command line arguments: " + args.toString());
-            JMSpecs specs = new JMSpecs();
-            specs.getUserSystemProperties().addAll(userSysProps);
-            specs.getSystemProperties().put("search_paths", System.getProperty("search_paths"));
-            specs.getSystemProperties().put("jmeter.home", project.jmeter.workDir.getAbsolutePath());
-            specs.getSystemProperties().put("saveservice_properties", System.getProperty("saveservice_properties"));
-            specs.getSystemProperties().put("upgrade_properties", System.getProperty("upgrade_properties"));
-            specs.getSystemProperties().put("log_file", project.jmeter.jmLog);
+            log.info("JMeter is called with the following command line arguments: " + args.toString())
+            JMSpecs specs = new JMSpecs()
+            specs.getUserSystemProperties().addAll(userSysProps)
+            specs.getSystemProperties().put("search_paths", System.getProperty("search_paths"))
+            specs.getSystemProperties().put("jmeter.home", project.jmeter.workDir.getAbsolutePath())
+            specs.getSystemProperties().put("saveservice_properties", System.getProperty("saveservice_properties"))
+            specs.getSystemProperties().put("upgrade_properties", System.getProperty("upgrade_properties"))
+            specs.getSystemProperties().put("log_file", project.jmeter.jmLog)
 
             if ( project.jmeter.csvLogFile == true) 
-            	specs.getSystemProperties().put("jmeter.save.saveservice.output_format", "csv");
+            	specs.getSystemProperties().put("jmeter.save.saveservice.output_format", "csv")
             else 
-            	specs.getSystemProperties().put("jmeter.save.saveservice.output_format", "xml");
+            	specs.getSystemProperties().put("jmeter.save.saveservice.output_format", "xml")
 
             //enable summarizer
             if (project.jmeter.showSummarizer == true){
@@ -117,13 +117,13 @@ public class TaskJMRun extends DefaultTask {
                 specs.getSystemProperties().put('summariser.out','true')
             }
 
-            specs.getJmeterProperties().addAll(args);
-            specs.setMaxHeapSize(project.jmeter.maxHeapSize.toString());
-            specs.setMinHeapSize(project.jmeter.minHeapSize.toString());
-            new JMeterRunner().executeJmeterCommand(specs, project.jmeter.workDir.getAbsolutePath());
-            return resultFile;
+            specs.getJmeterProperties().addAll(args)
+            specs.setMaxHeapSize(project.jmeter.maxHeapSize.toString())
+            specs.setMinHeapSize(project.jmeter.minHeapSize.toString())
+            new JMeterRunner().executeJmeterCommand(specs, project.jmeter.workDir.getAbsolutePath())
+            return resultFile
         } catch (IOException e) {
-            throw new GradleException("Can't execute test", e);
+            throw new GradleException("Can't execute test", e)
         }
     }
 }

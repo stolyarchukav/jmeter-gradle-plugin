@@ -27,8 +27,10 @@ class JMeterRunner {
     }
 
     void executeJmeterCommand(JMSpecs specs, String workingDirectory) {
-        ProcessBuilder processBuilder = new ProcessBuilder(createArgumentList(specs, workingDirectory, "org.apache.jmeter.NewDriver")).inheritIO()
-        launchProcess(processBuilder, workingDirectory);
+        ProcessBuilder processBuilder = new ProcessBuilder(createArgumentList(specs, workingDirectory, "org.apache.jmeter.NewDriver"))
+        processBuilder = processBuilder.inheritIO()
+//        processBuilder = processBuilder.redirectOutput(new File('/tmp/jmeter.out'))
+        launchProcess(processBuilder, workingDirectory)
     }
 
     private String[] createArgumentList(JMSpecs specs, String workDir, String launchClass) {
@@ -61,12 +63,12 @@ class JMeterRunner {
      * @param workDir working directory of executed build
     */
     private File generatePatherJar(String workDir){
-        File patherJar = new File(new File(workDir), "pather.jar")
+        File patherJar = new File(new File(workDir), 'pather.jar')
         if (patherJar.exists()) patherJar.delete()
-        Manifest manifest = new Manifest();
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
 
-        StringBuilder cpBuilder = new StringBuilder();
+        StringBuilder cpBuilder = new StringBuilder()
 
         //add from jmeter/lib
         new File(workDir, "lib").eachFileRecurse(FileType.FILES){ file ->
@@ -91,11 +93,11 @@ class JMeterRunner {
 
         classPath.each {u ->
             cpBuilder.append(u.getPath())
-            cpBuilder.append(" ")
+            cpBuilder.append(' ')
         }
         manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, cpBuilder.substring(0, cpBuilder.size() - 1) )
-        JarOutputStream target = new JarOutputStream(new FileOutputStream(patherJar.getCanonicalPath()), manifest);
-        target.close();
+        JarOutputStream target = new JarOutputStream(new FileOutputStream(patherJar.getCanonicalPath()), manifest)
+        target.close()
         return patherJar
     }
 

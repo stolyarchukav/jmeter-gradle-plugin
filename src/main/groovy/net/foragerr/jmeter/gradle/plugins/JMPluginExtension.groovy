@@ -41,7 +41,6 @@ class JMPluginExtension {
 
     // For internal use, Not user settable //
     String jmVersion
-    String jmPluginVersion
     File workDir = null
     File binDir = null
     File reportDir = null

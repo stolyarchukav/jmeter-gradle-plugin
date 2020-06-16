@@ -1,9 +1,6 @@
 package net.foragerr.jmeter.gradle.plugins.utils
 
 import org.gradle.api.GradleException
-import java.io.BufferedReader
-import java.io.File
-
 
 class ErrorScanner {
     private static final String PAT_ERROR = "<error>true</error>"
@@ -21,8 +18,8 @@ class ErrorScanner {
         this.failBuildOnError = failBuildOnError
     }
 
-    public boolean scanForProblems(File file) throws IOException {
-        def result = false;
+    boolean scanForProblems(File file) throws IOException {
+        def result = false
         file.eachLine {line ->
             def lineResult = lineContainsForErrors(line)
             if (!result) {
