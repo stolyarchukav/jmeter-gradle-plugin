@@ -8,8 +8,6 @@ script:
   - ./gradlew -s check
 
 after_success:
-  - ./gradlew -s artifactoryPublish
-  - ./gradlew -s bintrayUpload
   - ./gradlew -s publishPlugins
 
 branches:

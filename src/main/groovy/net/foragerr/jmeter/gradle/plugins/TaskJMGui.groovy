@@ -4,25 +4,35 @@ import net.foragerr.jmeter.gradle.plugins.utils.JMUtils
 import net.foragerr.jmeter.gradle.plugins.worker.JMeterRunner
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.WorkerExecutor
 
-class TaskJMGui extends DefaultTask {
+import javax.inject.Inject
+
+abstract class TaskJMGui extends DefaultTask {
 
     protected final Logger log = Logging.getLogger(getClass())
     private List<File> jmeterSystemPropertiesFiles = project.jmeter.jmSystemPropertiesFiles
 
+    @Inject
+    abstract WorkerExecutor getWorkerExecutor()
+
     @TaskAction
     jmGui() throws IOException {
         try {
+            JMPluginExtension jmeter = project.jmeter as JMPluginExtension
+
             List<String> args = new ArrayList<String>()
             args.addAll(Arrays.asList(
                     "-p", JMUtils.getJmeterPropsFile(project).getCanonicalPath()
             ))
 
-            if (project.jmeter.jmAddProp)
-                args.addAll(Arrays.asList("-q", project.jmeter.jmAddProp.getCanonicalPath()))
+            if (jmeter.jmAddProp)
+                args.addAll(Arrays.asList("-q", jmeter.jmAddProp.getCanonicalPath()))
 
             List<File> testFiles = JMUtils.getListOfTestFiles(project)
             if (testFiles.size() > 0) args.addAll(Arrays.asList("-t", testFiles[0].getCanonicalPath()))
@@ -37,8 +47,8 @@ class TaskJMGui extends DefaultTask {
                 }
             }
 
-            if (project.jmeter.jmSystemProperties != null) {
-                for (String systemProperty : project.jmeter.jmSystemProperties) {
+            if (jmeter.jmSystemProperties != null) {
+                for (String systemProperty : jmeter.jmSystemProperties) {
                     userSysProps.addAll(Arrays.asList(systemProperty))
                 }
             }
@@ -49,17 +59,24 @@ class TaskJMGui extends DefaultTask {
 
             JMSpecs specs = new JMSpecs()
             specs.getUserSystemProperties().addAll(userSysProps)
-            specs.getSystemProperties().put("search_paths", System.getProperty("search_paths"))
-            specs.getSystemProperties().put("jmeter.home", project.jmeter.workDir.getAbsolutePath())
-            specs.getSystemProperties().put("saveservice_properties", System.getProperty("saveservice_properties"))
-            specs.getSystemProperties().put("upgrade_properties", System.getProperty("upgrade_properties"))
-            specs.getSystemProperties().put("log_file", project.jmeter.jmLog)
-            specs.getSystemProperties().put("keytool.directory", System.getProperty("java.home") + File.separator + "bin")
-            specs.getSystemProperties().put("proxy.cert.directory", project.jmeter.workDir.getAbsolutePath())
+            specs.getSystemProperties().put('search_paths',
+                    System.getProperty('search_paths'))
+            specs.getSystemProperties().put('jmeter.home',
+                    jmeter.workDir.getAbsolutePath())
+            specs.getSystemProperties().put('saveservice_properties',
+                    new File(jmeter.workDir, 'saveservice.properties').getAbsolutePath())
+            specs.getSystemProperties().put('upgrade_properties',
+                    new File(jmeter.workDir, 'upgrade.properties').getAbsolutePath())
+            specs.getSystemProperties().put('log_file', jmeter.jmLog.getAbsolutePath())
+            specs.getSystemProperties().put("log4j.configurationFile",
+                    new File(jmeter.workDir, 'log4j2.xml').getAbsolutePath())
+            specs.getSystemProperties().put('keytool.directory', System.getProperty("java.home") + File.separator + "bin")
+            specs.getSystemProperties().put('proxy.cert.directory', jmeter.workDir.getAbsolutePath())
             specs.getJmeterProperties().addAll(args)
-            specs.setMaxHeapSize(project.jmeter.maxHeapSize.toString())
-            specs.setMinHeapSize(project.jmeter.minHeapSize.toString())
-            new JMeterRunner().executeJmeterCommand(specs, project.jmeter.workDir.getAbsolutePath())
+            specs.setMaxHeapSize(jmeter.maxHeapSize.toString())
+            specs.setMinHeapSize(jmeter.minHeapSize.toString())
+            Iterable<File> jmeterConfiguration = project.buildscript.configurations.classpath
+            new JMeterRunner(workerExecutor, jmeterConfiguration).executeJmeterCommand(specs, jmeter.workDir.getAbsolutePath())
 
         } catch (IOException e) {
             throw new GradleException("Error Launching JMeter GUI", e)

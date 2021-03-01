@@ -5,37 +5,35 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'groovy'
     id 'maven-publish'
-    id "com.jfrog.bintray" version "1.8.5"
-	id "com.jfrog.artifactory" version "4.15.2"
-	id "com.gradle.plugin-publish" version "0.12.0"
+	id "com.gradle.plugin-publish" version "0.13.0"
     id "java-gradle-plugin"
-    id 'com.github.ben-manes.versions' version '0.28.0'
+    id 'com.github.ben-manes.versions' version '0.36.0'
 }
 
 //--- Project information ---
 group = 'com.patdouble'
 archivesBaseName = 'jmeter-gradle-plugin'
 
-ext.thisPluginVersion="1.2.0"
+ext.thisPluginVersion="1.3.0"
 ext.jmVersion = "5.3"
 version = System.getenv('CIRCLE_TAG') ?: "$thisPluginVersion-$jmVersion-${LocalDateTime.now().format(DateTimeFormatter.ofPattern('yyyyMMddHHmmss'))}"
 
 //--- Repositories ---
 repositories {
-    jcenter()
+    mavenCentral()
 //    maven{ url 'https://repository.apache.org/content/repositories/releases'}
 }
 
 //--- Dependencies ---
 configurations.all {
     resolutionStrategy {
-        force "org.codehaus.groovy:groovy-all:2.5.12"
+        force "org.codehaus.groovy:groovy-all:2.5.14"
     }
 }
 dependencies {
     implementation gradleApi()
     implementation 'xml-apis:xml-apis:1.0.b2'
-    implementation 'org.apache.ant:ant:1.10.8'
+    implementation 'org.apache.ant:ant:1.10.9'
     implementation 'org.rendersnake:rendersnake:1.9.0'
     implementation 'org.beanshell:bsh-core:2.0b4'
     implementation 'commons-httpclient:commons-httpclient:3.1'
@@ -87,7 +85,7 @@ dependencies {
     implementation("org.apache.jmeter:ApacheJMeter:${jmVersion}")
     implementation("org.apache.jmeter:jorphan:${jmVersion}")
 
-	testImplementation "junit:junit:4.13"
+	testImplementation "junit:junit:4.13.2"
 }
 
 configurations {
@@ -96,12 +94,12 @@ configurations {
 
 //--- Tasks ---
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 	from sourceSets.main.allSource
 }
 
@@ -155,7 +153,6 @@ publishing {
 			//Workaround for gradle plugin-publish defect: https://issues.gradle.org/browse/GRADLE-3274
             //since maven-publish refuses to propagate exclusions to pom, DIY. :(
 			from(components.java)
-			def dependencies =  project.configurations[JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME].getAllDependencies()
 			def xmlExclusionList = project.configurations[JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME].getExcludeRules()
 			pom.withXml{
 				asNode().dependencies.dependency.each{ xmlDep ->
@@ -184,32 +181,6 @@ publishing {
     }
 }
 
-//--- bintray publishing ---
-//       for Releases
-bintray {
-	user = System.getenv('BINTRAY_USER')
-	key = System.getenv('BINTRAY_API_KEY')
-
-    publications = ['mavenJava'] //When uploading Maven-based publication files
-    publish = true //If version should be auto published after an upload
-    pkg {
-        repo = (System.getenv('CIRCLE_TAG') ? 'plugins' : 'plugins-snapshots')
-        name = "$archivesBaseName"
-        userOrg = 'double16'
-        licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
-        websiteUrl = 'https://github.com/double16/jmeter-gradle-plugin'
-        issueTrackerUrl = 'https://github.com/double16/jmeter-gradle-plugin/issues'
-        vcsUrl = 'https://github.com/double16/jmeter-gradle-plugin.git'
-
-        version {
-            name = project.version //Bintray logical version name
-            released = new Date()
-//            gpg { sign = true }
-        }
-    }
-}
-
 //--- gradle publishing ---
 //       for Releases
 publishPlugins.onlyIf {
@@ -234,28 +205,4 @@ pluginBundle {
           displayName = 'JMeter Gradle Plugin'
       }
     }
-}
-
-//--- oss.jfrog artifactory publishing ---
-//         For SNAPSHOT publishing
-artifactory {
-	contextUrl = 'https://oss.jfrog.org/artifactory'
-	publish {
-		repository {
-			repoKey = 'oss-snapshot-local'
-			username = System.getenv('BINTRAY_USER')
-			password = System.getenv('BINTRAY_API_KEY')
-		}
-
-		defaults {
-			publications('mavenJava')
-		}
-	}
-	resolve {
-		repository {
-			repoKey = 'oss-snapshot-local'
-			username = System.getenv('BINTRAY_USER')
-			password = System.getenv('BINTRAY_API_KEY')
-		}
-	}
 }

@@ -3,6 +3,7 @@ package net.foragerr.jmeter.gradle.plugins
 import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskAction
@@ -26,15 +27,15 @@ class TaskJMInit extends DefaultTask {
         project.jmeter.binDir = binDir
 
         // Test Files //
-        project.jmeter.testFileDir = project.jmeter.testFileDir == null ? new File(project.getProjectDir(), "src/test/jmeter") : project.jmeter.testFileDir
+        project.jmeter.testFileDir = project.jmeter.testFileDir == null ? new File(project.getProjectDir(), 'src/test/jmeter') : project.jmeter.testFileDir
 
         // Logs //
         project.jmeter.reportDir = project.jmeter.reportDir ?: new File(buildDir, "jmeter-report")
         project.jmeter.jmLog = project.jmeter.jmLog ?:  new File(project.jmeter.reportDir, "jmeter.log")
 
         // Java Properties //
-        project.jmeter.maxHeapSize = project.jmeter.maxHeapSize ?: "512M"
-        project.jmeter.minHeapSize = project.jmeter.minHeapSize ?: "512M"
+        project.jmeter.maxHeapSize = project.jmeter.maxHeapSize ?: '512M'
+        project.jmeter.minHeapSize = project.jmeter.minHeapSize ?: '512M'
 
         // Plugin Options
         project.jmeter.ignoreErrors = project.jmeter.ignoreErrors == null ? false : project.jmeter.ignoreErrors
@@ -49,10 +50,10 @@ class TaskJMInit extends DefaultTask {
         //Create required folders
         binDir.mkdirs()
 
-        def jmeterJUnitFolder = new File(workDir, "lib/junit")
+        def jmeterJUnitFolder = new File(workDir, 'lib/junit')
         jmeterJUnitFolder.mkdirs()
 
-        def jmeterExtFolder = new File(workDir, "lib/ext")
+        def jmeterExtFolder = new File(workDir, 'lib/ext')
         jmeterExtFolder.mkdirs()
         project.jmeter.reportDir.mkdirs()
 
@@ -106,12 +107,11 @@ class TaskJMInit extends DefaultTask {
 
     protected void resolveJmeterSearchPath() {
         StringBuilder cp = new StringBuilder()
-        URL[] classPath = ((URLClassLoader) this.getClass().getClassLoader()).getURLs()
+        FileCollection files = project.buildscript.configurations.classpath
         String jmeterVersionPattern = project.jmeter.jmVersion.replaceAll("[.]", "[.]")
         String pathSeparator = ';' //intentionally not File.PathSeparator - JMeter parses for ; on all platforms
-        for (URL dep : classPath) {
-            if (dep.getPath().matches("^.*org[./]apache[./]jmeter[/]ApacheJMeter.*" +
-                    jmeterVersionPattern + ".jar\$")) {
+        for (File dep : files) {
+            if (dep.getPath().matches("^.*[/]ApacheJMeter.*" + jmeterVersionPattern + ".jar\$")) {
                 cp.append(dep.getPath())
                 cp.append(pathSeparator)
             } else if (dep.getPath().matches("^.*bsh.*[.]jar\$")) {
@@ -124,8 +124,8 @@ class TaskJMInit extends DefaultTask {
             }
         }
         cp.append(new File(project.jmeter.workDir as File, "lib" + File.separator + "ext").getCanonicalPath())
-        System.setProperty("search_paths", cp.toString())
-        log.debug("Search path is set to " + System.getProperty("search_paths"))
+        System.setProperty('search_paths', cp.toString())
+        log.debug('Search path is set to ' + System.getProperty("search_paths"))
     }
 
     private void LoadPluginProperties() {

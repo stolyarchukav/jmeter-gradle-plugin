@@ -10,6 +10,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.rendersnake.HtmlAttributes
 import org.rendersnake.HtmlCanvas
@@ -23,7 +24,6 @@ import static org.rendersnake.HtmlAttributesFactory.lang
 class TaskJMReports extends DefaultTask {
 
     protected final Logger log = Logging.getLogger(getClass())
-    File reportDir = null
 
     public static final List<String> pluginTypes = Arrays.asList(
             "ResponseTimesOverTime",
@@ -39,14 +39,14 @@ class TaskJMReports extends DefaultTask {
             "ThroughputVsThreads"
     )
 
-//	TODO: createReports should only kick-in if there are new jtl files to process.
-//	@InputDirectory
-//	def File project.jmeter.reportDir
+    // TODO: createReports should only kick-in if there are new jtl files to process.
+	@OutputDirectory
+    File reportDir = null
 
     @TaskAction
     jmCreateReport(){
 
-        reportDir = project.jmeter.reportDir ?: new File(project.buildDir, "jmeter-report")
+        reportDir = project.jmeter.reportDir ?: new File(project.buildDir, 'jmeter-report')
 
 		//Get List of resultFiles
 		List<File> jmResultFiles = new ArrayList<File>()
@@ -105,7 +105,6 @@ class TaskJMReports extends DefaultTask {
         JMeterUtils.setJMeterHome(jmHome.getAbsolutePath())
         JMeterUtils.loadJMeterProperties(jmProps.getAbsolutePath())
         JMeterUtils.setProperty("log_file", reportBaseDir.getCanonicalPath() + File.separator + name + ".log")
-        JMeterUtils.initLogging()
         JMeterUtils.initLocale()
     }
 
