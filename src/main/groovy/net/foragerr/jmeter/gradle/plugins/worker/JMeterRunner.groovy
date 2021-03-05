@@ -1,6 +1,7 @@
 package net.foragerr.jmeter.gradle.plugins.worker
 
 import groovy.io.FileType
+import groovy.transform.CompileDynamic
 import net.foragerr.jmeter.gradle.plugins.JMSpecs
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.workers.ClassLoaderWorkerSpec
@@ -10,6 +11,7 @@ import org.gradle.workers.WorkerExecutor
 
 import java.util.regex.Pattern
 
+@CompileDynamic
 class JMeterRunner {
 
     final WorkerExecutor workerExecutor
@@ -28,8 +30,9 @@ class JMeterRunner {
 
         workQueue.submit(JMeterAction) {
             List<String> cliArgs = []
+            cliArgs << "-Jjmeter.exit.check.pause=-1" // prevents system exit check which won't happen with a daemon
             cliArgs.addAll(specs.jmeterProperties)
-            specs.getUserSystemProperties().each { userSysProp ->
+            specs.userSystemProperties.each { userSysProp ->
                 cliArgs << "-J${userSysProp}".toString()
             }
 
@@ -45,7 +48,7 @@ class JMeterRunner {
         final Pattern openjfxOSPattern = ~/\/javafx-.*-${operatingSystemClassifier()}\.jar/
 
         jmeterConfiguration
-                .findAll {!it.name.find(openjfxPattern) || it.name.find(openjfxOSPattern) }
+                .findAll { File it -> !it.name.find(openjfxPattern) || it.name.find(openjfxOSPattern) }
                 .each { spec.classpath.from(it) }
 
         spec.classpath.with {
@@ -66,9 +69,9 @@ class JMeterRunner {
     private void populateProcessSpecs(ProcessWorkerSpec spec, JMSpecs specs, String workingDirectory) {
         spec.forkOptions {
 //            workingDir(workingDirectory)
-            setMinHeapSize(specs.minHeapSize)
-            setMaxHeapSize(specs.maxHeapSize)
-            specs.getSystemProperties().each { k, v ->
+            minHeapSize = specs.minHeapSize
+            maxHeapSize = specs.maxHeapSize
+            specs.systemProperties.each { k, v ->
                 spec.forkOptions.systemProperty(k, v)
             }
         }
@@ -80,7 +83,7 @@ class JMeterRunner {
         if (javaMajorVersion < 11) {
             return platform
         }
-        OperatingSystem currentOS = org.gradle.internal.os.OperatingSystem.current()
+        OperatingSystem currentOS = OperatingSystem.current()
         if (currentOS.isWindows()) {
             platform = 'win'
         } else if (currentOS.isLinux()) {

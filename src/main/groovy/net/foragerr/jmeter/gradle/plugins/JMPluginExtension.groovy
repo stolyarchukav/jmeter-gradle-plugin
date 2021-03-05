@@ -1,5 +1,8 @@
 package net.foragerr.jmeter.gradle.plugins
 
+import groovy.transform.CompileDynamic
+
+@CompileDynamic
 class JMPluginExtension {
 
     // Test Files //
@@ -26,7 +29,7 @@ class JMPluginExtension {
     Boolean remote = false
     Boolean csvLogFile = null
     Boolean showSummarizer = null
-	Boolean failBuildOnError = null
+    Boolean failBuildOnError = null
 
     // Report Options //
     Boolean enableReports = true

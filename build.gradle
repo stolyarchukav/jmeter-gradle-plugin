@@ -8,6 +8,9 @@ plugins {
 	id "com.gradle.plugin-publish" version "0.13.0"
     id "java-gradle-plugin"
     id 'com.github.ben-manes.versions' version '0.36.0'
+    id 'ru.vyarus.quality' version '4.4.0'
+    id 'com.bmuschko.clover' version '3.0.1'
+    id 'org.owasp.dependencycheck' version '6.1.0'
 }
 
 //--- Project information ---
@@ -15,7 +18,7 @@ group = 'com.patdouble'
 archivesBaseName = 'jmeter-gradle-plugin'
 
 ext.thisPluginVersion="1.3.0"
-ext.jmVersion = "5.3"
+ext.jmVersion = "5.4.1"
 version = System.getenv('CIRCLE_TAG') ?: "$thisPluginVersion-$jmVersion-${LocalDateTime.now().format(DateTimeFormatter.ofPattern('yyyyMMddHHmmss'))}"
 
 //--- Repositories ---
@@ -49,7 +52,7 @@ dependencies {
     [
             'kg.apc:jmeter-plugins-casutg:2.9',
             'kg.apc:jmeter-plugins-cmd:2.2',
-            'kg.apc:jmeter-plugins-webdriver:3.1',
+            'kg.apc:jmeter-plugins-webdriver:3.3',
             'kg.apc:jmeter-plugins-perfmon:2.1',
             'kg.apc:jmeter-plugins-udp:0.4',
             'kg.apc:jmeter-plugins-graphs-basic:2.0',
@@ -86,6 +89,8 @@ dependencies {
     implementation("org.apache.jmeter:jorphan:${jmVersion}")
 
 	testImplementation "junit:junit:4.13.2"
+
+    clover 'org.openclover:clover:4.4.1'
 }
 
 configurations {
@@ -204,5 +209,31 @@ pluginBundle {
         jmeterPlugin {
           displayName = 'JMeter Gradle Plugin'
       }
+    }
+}
+
+check.dependsOn dependencyCheckAggregate
+dependencyCheck {
+    skipConfigurations = [
+            'developmentOnly',
+            'testImplementation',
+            'testRuntimeOnly',
+            'clover',
+            'codenarc',
+    ]
+}
+
+clover {
+    report {
+        html = true
+        xml = true
+    }
+}
+
+afterEvaluate {
+    codenarc {
+        maxPriority1Violations = 0
+        maxPriority2Violations = 100
+        maxPriority3Violations = 200
     }
 }

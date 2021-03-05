@@ -1,10 +1,12 @@
 package net.foragerr.jmeter.gradle.plugins.worker
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.jmeter.JMeter
 import org.gradle.workers.WorkAction
 
 @Slf4j
+@CompileStatic
 abstract class JMeterAction implements WorkAction<JMeterParameters> {
     @Override
     void execute() {

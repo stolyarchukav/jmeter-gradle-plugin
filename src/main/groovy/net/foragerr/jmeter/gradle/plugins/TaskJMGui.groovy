@@ -1,48 +1,50 @@
 package net.foragerr.jmeter.gradle.plugins
 
+import groovy.transform.CompileDynamic
+import groovy.util.logging.Slf4j
 import net.foragerr.jmeter.gradle.plugins.utils.JMUtils
 import net.foragerr.jmeter.gradle.plugins.worker.JMeterRunner
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 
 import javax.inject.Inject
 
+@CompileDynamic
+@Slf4j
 abstract class TaskJMGui extends DefaultTask {
 
-    protected final Logger log = Logging.getLogger(getClass())
     private List<File> jmeterSystemPropertiesFiles = project.jmeter.jmSystemPropertiesFiles
 
     @Inject
     abstract WorkerExecutor getWorkerExecutor()
 
     @TaskAction
-    jmGui() throws IOException {
+    void jmGui() throws IOException {
         try {
             JMPluginExtension jmeter = project.jmeter as JMPluginExtension
 
-            List<String> args = new ArrayList<String>()
+            List<String> args = []
             args.addAll(Arrays.asList(
-                    "-p", JMUtils.getJmeterPropsFile(project).getCanonicalPath()
+                    '-p', JMUtils.getJmeterPropsFile(project).getCanonicalPath()
             ))
 
-            if (jmeter.jmAddProp)
-                args.addAll(Arrays.asList("-q", jmeter.jmAddProp.getCanonicalPath()))
+            if (jmeter.jmAddProp) {
+                args.addAll(Arrays.asList('-q', jmeter.jmAddProp.getCanonicalPath()))
+            }
 
             List<File> testFiles = JMUtils.getListOfTestFiles(project)
-            if (testFiles.size() > 0) args.addAll(Arrays.asList("-t", testFiles[0].getCanonicalPath()))
+            if (testFiles.size() > 0) {
+                args.addAll(Arrays.asList('-t', testFiles[0].getCanonicalPath()))
+            }
 
             //User provided sysprops
-            List<String> userSysProps = new ArrayList<String>()
+            List<String> userSysProps = []
             if (jmeterSystemPropertiesFiles != null) {
                 for (File PropertyFile : jmeterSystemPropertiesFiles) {
                     if (PropertyFile.exists() && PropertyFile.isFile()) {
-                        args.addAll(Arrays.asList("-S", PropertyFile.getCanonicalPath()))
+                        args.addAll(Arrays.asList('-S', PropertyFile.getCanonicalPath()))
                     }
                 }
             }
@@ -55,44 +57,43 @@ abstract class TaskJMGui extends DefaultTask {
 
             initUserProperties(args)
 
-            log.debug("JMeter is called with the following command line arguments: " + args.toString())
+            log.debug('JMeter is called with the following command line arguments: {}', args.toString())
 
             JMSpecs specs = new JMSpecs()
-            specs.getUserSystemProperties().addAll(userSysProps)
-            specs.getSystemProperties().put('search_paths',
+            specs.userSystemProperties.addAll(userSysProps)
+            specs.systemProperties.put('search_paths',
                     System.getProperty('search_paths'))
-            specs.getSystemProperties().put('jmeter.home',
+            specs.systemProperties.put('jmeter.home',
                     jmeter.workDir.getAbsolutePath())
-            specs.getSystemProperties().put('saveservice_properties',
+            specs.systemProperties.put('saveservice_properties',
                     new File(jmeter.workDir, 'saveservice.properties').getAbsolutePath())
-            specs.getSystemProperties().put('upgrade_properties',
+            specs.systemProperties.put('upgrade_properties',
                     new File(jmeter.workDir, 'upgrade.properties').getAbsolutePath())
-            specs.getSystemProperties().put('log_file', jmeter.jmLog.getAbsolutePath())
-            specs.getSystemProperties().put("log4j.configurationFile",
+            specs.systemProperties.put('log_file', jmeter.jmLog.getAbsolutePath())
+            specs.systemProperties.put("log4j.configurationFile",
                     new File(jmeter.workDir, 'log4j2.xml').getAbsolutePath())
-            specs.getSystemProperties().put('keytool.directory', System.getProperty("java.home") + File.separator + "bin")
-            specs.getSystemProperties().put('proxy.cert.directory', jmeter.workDir.getAbsolutePath())
-            specs.getJmeterProperties().addAll(args)
-            specs.setMaxHeapSize(jmeter.maxHeapSize.toString())
-            specs.setMinHeapSize(jmeter.minHeapSize.toString())
+            specs.systemProperties.put('keytool.directory', System.getProperty('java.home') + File.separator + 'bin')
+            specs.systemProperties.put('proxy.cert.directory', jmeter.workDir.getAbsolutePath())
+            specs.jmeterProperties.addAll(args)
+            specs.maxHeapSize = jmeter.maxHeapSize.toString()
+            specs.minHeapSize = jmeter.minHeapSize.toString()
             Iterable<File> jmeterConfiguration = project.buildscript.configurations.classpath
             new JMeterRunner(workerExecutor, jmeterConfiguration).executeJmeterCommand(specs, jmeter.workDir.getAbsolutePath())
-
         } catch (IOException e) {
-            throw new GradleException("Error Launching JMeter GUI", e)
+            throw new GradleException('Error Launching JMeter GUI', e)
         }
     }
 
     //TODO should probably also be in JMUtils
     private void initUserProperties(List<String> jmeterArgs) {
         if (project.jmeter.jmUserProperties != null) {
-            project.jmeter.jmUserProperties.each { property -> jmeterArgs.add("-J" + property) }
+            project.jmeter.jmUserProperties.each { property -> jmeterArgs.add('-J' + property) }
         }
     }
 
     private void initGlobalProperties(List<String> jmeterArgs) {
         if (project.jmeter.jmGlobalProperties != null) {
-            project.jmeter.jmGlobalProperties.each { property -> jmeterArgs.add("-G" + property) }
+            project.jmeter.jmGlobalProperties.each { property -> jmeterArgs.add('-G' + property) }
         }
     }
 }

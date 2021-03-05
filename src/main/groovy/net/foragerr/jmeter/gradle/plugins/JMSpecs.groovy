@@ -1,13 +1,15 @@
 package net.foragerr.jmeter.gradle.plugins
 
+import groovy.transform.CompileDynamic
 
-class JMSpecs implements Serializable{
+@CompileDynamic
+class JMSpecs implements Serializable {
 
     private String maxHeapSize
     private String minHeapSize
-    private List<String> jmeterProperties = new ArrayList<>()
-    private Map<String, String> systemProperties = new HashMap<>()
-    private List<String> userSystemProperties = new ArrayList<>()
+    private List<String> jmeterProperties = []
+    private Map<String, String> systemProperties = [:]
+    private List<String> userSystemProperties = []
 
     List<String> getUserSystemProperties() {
         return userSystemProperties

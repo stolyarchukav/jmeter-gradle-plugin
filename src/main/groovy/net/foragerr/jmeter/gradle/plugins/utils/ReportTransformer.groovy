@@ -1,14 +1,16 @@
 package net.foragerr.jmeter.gradle.plugins.utils
 
+import groovy.transform.CompileStatic
+
 import javax.xml.transform.Transformer
 import javax.xml.transform.TransformerConfigurationException
 import javax.xml.transform.TransformerException
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.stream.StreamResult
 import javax.xml.transform.stream.StreamSource
-
 import java.text.SimpleDateFormat
 
+@CompileStatic
 class ReportTransformer {
 
     private final Transformer transformer

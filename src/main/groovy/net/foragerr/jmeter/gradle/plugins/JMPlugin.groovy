@@ -1,44 +1,45 @@
 package net.foragerr.jmeter.gradle.plugins
 
+import groovy.transform.CompileDynamic
+import groovy.util.logging.Slf4j
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 
 /**
  * Created by @author foragerr@gmail.com on 7/17/2015.
  */
-class JMPlugin implements Plugin<Project>{
-
+@CompileDynamic
+@Slf4j
+class JMPlugin implements Plugin<Project> {
     static final String TASK_GROUP_NAME = 'JMeter'
-    protected final Logger log = Logging.getLogger(getClass())
+    static final String TASK_NAME_INIT = 'jmInit'
 
-    void apply(Project project){
-        project.extensions.create("jmeter", JMPluginExtension)
+    void apply(Project project) {
+        project.extensions.create('jmeter', JMPluginExtension)
 
-        project.task('jmInit', type:TaskJMInit){
-            group null //hide this task
-            description 'Init task - pointless to run by itself'
+        project.task(TASK_NAME_INIT, type: TaskJMInit) {
+            group = null //hide this task
+            description = 'Init task - pointless to run by itself'
         }
 
-        project.task('jmRun', type:TaskJMRun, dependsOn: 'jmInit'){
-            group TASK_GROUP_NAME
-            description 'Execute JMeter Tests'
+        project.task('jmRun', type: TaskJMRun, dependsOn: TASK_NAME_INIT) {
+            group = TASK_GROUP_NAME
+            description = 'Execute JMeter Tests'
         }
 
-        project.task('jmGui', type:TaskJMGui, dependsOn: 'jmInit'){
-            group TASK_GROUP_NAME
-            description 'Launch JMeter GUI to edit tests'
+        project.task('jmGui', type: TaskJMGui, dependsOn: TASK_NAME_INIT) {
+            group = TASK_GROUP_NAME
+            description = 'Launch JMeter GUI to edit tests'
         }
 
-        project.task('jmReport', type:TaskJMReports, dependsOn: 'jmInit'){
-            group TASK_GROUP_NAME
-            description 'Create JMeter test Reports'
+        project.task('jmReport', type: TaskJMReports, dependsOn: TASK_NAME_INIT) {
+            group = TASK_GROUP_NAME
+            description = 'Create JMeter test Reports'
         }
 
-        project.task('jmClean', type:TaskJMClean){
-            group TASK_GROUP_NAME
-            description 'Clean JMeter test Reports'
+        project.task('jmClean', type: TaskJMClean) {
+            group = TASK_GROUP_NAME
+            description = 'Clean JMeter test Reports'
         }
     }
 }
