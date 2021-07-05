@@ -4,6 +4,9 @@
 For usage see: http://jmeter.foragerr.net/  
 or [wiki](https://github.com/jmeter-gradle-plugin/jmeter-gradle-plugin/wiki/Getting-Started)
 
+## Fork
+Forked to support Java 1.8 compatibility
+
 ## News
 **6/16/2020**
 * Version 1.2.0 released with support for Jmeter 5.3
