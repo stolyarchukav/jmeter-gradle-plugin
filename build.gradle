@@ -14,12 +14,15 @@ plugins {
 }
 
 //--- Project information ---
-group = 'com.patdouble'
+group = 'org.stolyarchuk'
 archivesBaseName = 'jmeter-gradle-plugin'
 
-ext.thisPluginVersion="1.3.0"
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext.thisPluginVersion="1.3.1"
 ext.jmVersion = "5.4.1"
-version = System.getenv('CIRCLE_TAG') ?: "$thisPluginVersion-$jmVersion-${LocalDateTime.now().format(DateTimeFormatter.ofPattern('yyyyMMddHHmmss'))}"
+version = "$thisPluginVersion-$jmVersion"
 
 //--- Repositories ---
 repositories {
@@ -130,9 +133,9 @@ processResources.doLast {
 //--- mvn-publish ---
 def pomConfig = {
 	scm {
-		url 'scm:git@github.com:double16/jmeter-gradle-plugin.git'
-		connection 'scm:git@github.com:double16/jmeter-gradle-plugin.git'
-		developerConnection 'scm:git@github.com:double16/jmeter-gradle-plugin.git'
+		url 'scm:git@github.com:stolyarchukav/jmeter-gradle-plugin.git'
+		connection 'scm:git@github.com:stolyarchukav/jmeter-gradle-plugin.git'
+		developerConnection 'scm:git@github.com:stolyarchukav/jmeter-gradle-plugin.git'
 	}
 	licenses {
 		license {
@@ -143,67 +146,38 @@ def pomConfig = {
 	}
 	developers {
 		developer {
-			id 'double16'
-			name 'Patrick Double'
-			url 'http://github.com/double16'
-			email 'pat@patdouble.com'
+			id 'stolyarchuk'
+			name 'Andrey Stolyarchuk'
+			url 'http://github.com/stolyarchukav'
+			email 'stolyarchukav@gmail.com'
 			roles { role 'Developer' }
 		}
 	}
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-			//Workaround for gradle plugin-publish defect: https://issues.gradle.org/browse/GRADLE-3274
-            //since maven-publish refuses to propagate exclusions to pom, DIY. :(
-			from(components.java)
-			def xmlExclusionList = project.configurations[JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME].getExcludeRules()
-			pom.withXml{
-				asNode().dependencies.dependency.each{ xmlDep ->
-					//delete scope tag
-					def xmlScope = xmlDep.get("scope")
-					if (xmlScope) xmlDep.remove(xmlScope)
-					//insert exclusions
-					def xmlExclusions = xmlDep.exclusions[0]
-					if (!xmlExclusions) xmlExclusions = xmlDep.appendNode('exclusions')
-					xmlExclusionList.each{ ExcludeRule exRule ->
-						def xmlExclusion = xmlExclusions.appendNode('exclusion')
-						xmlExclusion.appendNode('groupId', exRule.group)
-						xmlExclusion.appendNode('artifactId', exRule.module)
-					}
-				}
-
-			}
-			pom.withXml {
-				def root = asNode()
-				root.appendNode('description', 'A gradle plugin for running jmeter tests')
-				root.children().last() + pomConfig
-			}
-			artifact sourcesJar
-			artifact javadocJar
+    repositories {
+        maven {
+            name = 'localPluginRepository'
+            url = '../local-plugin-repository'
         }
     }
 }
 
-//--- gradle publishing ---
-//       for Releases
-publishPlugins.onlyIf {
-    System.getenv('CIRCLE_TAG')
-}
 gradlePlugin {
     plugins {
         jmeterPlugin {
-            id = 'com.patdouble.jmeter-gradle-plugin'
+            id = 'org.stolyarchuk.jmeter-gradle-plugin'
             implementationClass = 'net.foragerr.jmeter.gradle.plugins.JMPlugin'
         }
     }
 }
+
 pluginBundle {
     website = 'http://jmeter.foragerr.net'
-    vcsUrl = 'https://github.com/double16/jmeter-gradle-plugin.git'
+    vcsUrl = 'https://github.com/stolyarchukav/jmeter-gradle-plugin.git'
     description = 'A Gradle plugin for running JMeter tests'
-    tags = ['jmeter', 'performance']
+    tags = ['jmeter', 'performance', 'java8']
 
     plugins {
         jmeterPlugin {
